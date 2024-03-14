@@ -8,20 +8,6 @@ import { createPe } from "./performance";
 const pe = createPe("midi.ts");
 const radiusX = height / 2;
 const radiusY = height / 2;
-const drawHihat = lightUpNumberArray(
-  "hihat",
-  0.5,
-  "openHihats",
-  [255, 128, 0],
-  64
-);
-const drawCrash = lightUpNumberArray(
-  "crashCRASH",
-  2,
-  "crashes",
-  [255, 255, 255],
-  128
-);
 export let graphics: p5.Graphics;
 export function setup() {
   graphics = p.createGraphics(width, height);
@@ -38,10 +24,10 @@ export function draw() {
   const chord = drawChords(audioTime);
   pe("drawBass");
   const bass = drawBass(audioTime);
-  pe("drawHihat");
-  drawHihat(audioTime);
-  pe("drawCrash");
-  drawCrash(audioTime);
+  pe("drawOpenHihats");
+  drawOpenHihats(audioTime);
+  pe("drawCrashes");
+  drawCrashes(audioTime);
   pe("drawSolo");
   drawSolo(audioTime);
   pe("drawKick");
@@ -74,37 +60,55 @@ function drawBass(audioTime: number) {
     return name;
   }
 }
-function lightUpNumberArray(
-  chars: string,
-  duration: number,
-  arrayKey: "openHihats" | "crashes",
-  color: number[],
-  alpha: number
-) {
-  return (audioTime: number) => {
-    const array = midiData[arrayKey];
-    if (!array) {
+function drawOpenHihats(audioTime: number) {
+  if (midiData.openHihats[0] > audioTime) {
+    return;
+  }
+  const lastTimeIndex = midiData.openHihats.findIndex((t) => t > audioTime);
+  const lastTime =
+    lastTimeIndex === -1
+      ? midiData.openHihats[midiData.openHihats.length - 1]
+      : midiData.openHihats[lastTimeIndex - 1];
+  if (lastTime) {
+    const progress = Math.min(1, (audioTime - lastTime) / 0.5);
+    if (progress === 1) {
       return;
     }
-    if (array[0] > audioTime) {
+    quine.lightUp("Hihat", [255, 128, 0, 64 * (1 - progress)]);
+  }
+}
+function drawCrashes(audioTime: number) {
+  if (midiData.crashes[0] > audioTime) {
+    return;
+  }
+  const lastTimeIndex = midiData.crashes.findIndex((t) => t > audioTime);
+  const lastTime =
+    lastTimeIndex === -1
+      ? midiData.crashes[midiData.crashes.length - 1]
+      : midiData.crashes[lastTimeIndex - 1];
+  if (lastTime) {
+    const progress = Math.min(1, (audioTime - lastTime) / 2);
+    if (progress === 1) {
       return;
     }
-    const lastTimeIndex = array.findIndex((t) => t > audioTime);
-    const lastTime =
-      lastTimeIndex === -1 ? array[array.length - 1] : array[lastTimeIndex - 1];
-    if (lastTime) {
-      const progress = Math.min(1, (audioTime - lastTime) / duration);
-      if (progress === 1) {
-        return;
-      }
-      quine.lightUp(chars, [
-        color[0],
-        color[1],
-        color[2],
-        alpha * (1 - progress),
-      ]);
+    let text: string;
+    let alpha: number;
+    const prevFewSeconds = !!midiData.crashes.find(
+      (t) => t > lastTime - 2 && t < lastTime && t !== lastTime
+    );
+    const nextTime = midiData.crashes[lastTimeIndex];
+    if (!nextTime || (nextTime - lastTime > 2 && prevFewSeconds)) {
+      text = "CRASHcrash";
+      alpha = 128;
+    } else if (!prevFewSeconds) {
+      text = "CRASHcrash";
+      alpha = 96;
+    } else {
+      text = lastTimeIndex % 2 === 0 ? "CRASH" : "crash";
+      alpha = 96;
     }
-  };
+    quine.lightUp(text, [255, 255, 255, alpha * (1 - progress)]);
+  }
 }
 
 function drawSolo(audioTime: number) {
