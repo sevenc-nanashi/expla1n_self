@@ -26,7 +26,7 @@ let renderTarget = 0;
 let fullScreen = false;
 export function setup() {
   const canvas = p.createCanvas(width, height, "webgl");
-  p.frameRate(30);
+  p.frameRate(60);
   p.drawingContext.disable(p.drawingContext.DEPTH_TEST);
   canvas.mouseClicked(() => {
     if (!audio.audio.isPlaying()) {
@@ -35,7 +35,7 @@ export function setup() {
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Tab") {
-      renderTarget = (renderTarget + (e.shiftKey ? -1 : 1)) % 7;
+      renderTarget = (renderTarget + (e.shiftKey ? -1 : 1)) % 6;
     } else if (e.key === "e") {
       rate -= 0.5;
       audio.audio.rate(rate);
@@ -87,7 +87,11 @@ export function draw() {
     pe("audio.draw");
     audio.draw();
     pe("quine.draw");
+    quine.bgGraphics.updatePixels();
+    graphics.push();
+    graphics.scale(quine.charWidth, quine.charHeight);
     graphics.image(quine.bgGraphics, 0, 0);
+    graphics.pop();
     graphics.image(audio.graphics, 0, 0);
     graphics.image(midi.graphics, 0, 0);
     graphics.image(text.graphics, 0, 0);
@@ -101,15 +105,22 @@ export function draw() {
       pe("pixelizer.draw");
       pixelizer.draw(graphics, invertGraphics);
     } else {
-      const graphicsArray = [
-        text.graphics,
-        audio.graphics,
-        midi.graphics,
-        quine.bgGraphics,
-        quine.fontGraphics,
-      ];
-      const target = graphicsArray[renderTarget - 1];
-      p.image(target, ox, oy);
+      if (renderTarget === 4) {
+        p.push();
+        p.scale(quine.charWidth, quine.charHeight);
+        p.image(quine.bgGraphics, ox / quine.charWidth, oy / quine.charHeight);
+        p.pop();
+      } else {
+        const graphicsArray = [
+          text.graphics,
+          audio.graphics,
+          midi.graphics,
+          quine.bgGraphics,
+          quine.fontGraphics,
+        ];
+        const target = graphicsArray[renderTarget - 1];
+        p.image(target, ox, oy);
+      }
     }
 
     if (!fullScreen) {
@@ -123,6 +134,9 @@ export function draw() {
           bass,
           rate,
           section: currentSection(),
+          render: ["all", "text", "audio", "midi", "quine:bg", "quine:text"][
+            renderTarget % 6
+          ],
         })
           .map(([k, v]) => k + ": " + v)
           .join(", ") + "（Voicevox：春日部つむぎ）",

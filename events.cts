@@ -36,6 +36,8 @@ import { gzipSync } from "zlib";
       name: value,
     };
   });
+  const lyricsB64 = await jsonEncodeAndGzip(lyricsData);
+  const sectionsB64 = await jsonEncodeAndGzip(sectionsData);
   await fs.writeFile(
     "./src/eventsData.ts",
     `
@@ -43,8 +45,8 @@ import { gzipSync } from "zlib";
     export let lyrics: { startTime: number; endTime: number; lyric: string }[];
     export type Section = ${sectionsData.map((s) => `"${s.name}"`).join(" | ")}
     export let sections: { startTime: number; endTime: number; name: Section }[];
-    ungzip("${await jsonEncodeAndGzip(lyricsData)}").then(v => lyrics = v);
-    ungzip("${await jsonEncodeAndGzip(sectionsData)}").then(v => sections = v);
+    ungzip("${lyricsB64}", ${lyricsB64.length}).then(v => lyrics = v);
+    ungzip("${sectionsB64}", ${sectionsB64.length}).then(v => sections = v);
     `
   );
 })();

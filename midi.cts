@@ -38,12 +38,10 @@ import { gzipSync } from "node:zlib";
     export const ppq = ${parsed.header.ppq};
     ${(
       await Promise.all(
-        consts.map(
-          async ([name, key, value]) =>
-            `export let ${name}: ${key}; ungzip("${await jsonEncodeAndGzip(
-              value
-            )}").then(v => ${name} = v);`
-        )
+        consts.map(async ([name, key, value]) => {
+          const b64 = await jsonEncodeAndGzip(value);
+          return `export let ${name}: ${key}; ungzip("${b64}", ${b64.length}).then(v => ${name} = v);`;
+        })
       )
     ).join("\n")}
     `

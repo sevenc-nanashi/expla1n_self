@@ -1,4 +1,7 @@
-export const ungzip = async (data: string) => {
+export const ungzip = async (data: string, length: number) => {
+  if (data.length !== length) {
+    throw new Error("Invalid length");
+  }
   const readableStream = new Blob([
     Uint8Array.from(atob(data), (c) => c.charCodeAt(0)),
   ]).stream();
@@ -6,11 +9,5 @@ export const ungzip = async (data: string) => {
     // @ts-ignore
     new DecompressionStream("gzip")
   );
-  const json = new TextDecoder().decode(
-    (await decompressedStream
-      .getReader()
-      .read()
-      .then((r) => r.value)) as Uint8Array
-  );
-  return JSON.parse(json);
+  return await new Response(decompressedStream).json();
 };
