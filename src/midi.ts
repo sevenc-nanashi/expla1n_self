@@ -2,8 +2,11 @@ import p5 from "p5";
 import * as quine from "./quine";
 import * as audio from "./audio";
 import * as midiData from "./midiData";
+import * as voicevoxData from "./voicevoxData";
+import * as eventsData from "./eventsData";
 import { width, height } from "./const";
 import { createPe } from "./performance";
+import { currentSection } from "./time";
 
 const pe = createPe("midi.ts");
 const radiusX = height / 2;
@@ -28,8 +31,8 @@ export function draw() {
   drawOpenHihats(audioTime);
   pe("drawCrashes");
   drawCrashes(audioTime);
-  pe("drawPiano");
-  drawPiano(audioTime);
+  pe("drawPianoRoll");
+  drawPianoRoll(audioTime);
   pe("drawKick");
   drawKick(audioTime);
   pe("drawClap");
@@ -118,13 +121,30 @@ function drawCrashes(audioTime: number) {
   }
 }
 
-function drawPiano(audioTime: number) {
+let vvNotes: [number, number, number][] = [];
+function drawPianoRoll(audioTime: number, color: number[] = [255, 255, 255]) {
   const widthRatio = 0.5;
   const left = (quine.numChars / 2) * (1 - widthRatio);
   const right = (quine.numChars / 2) * (1 + widthRatio);
   const duration = 1.5;
   const width = right - left;
-  for (const piano of [midiData.melody, midiData.solo]) {
+  if (vvNotes.length === 0) {
+    const findSection = (time: number) => {
+      if (!eventsData.sections) {
+        throw new Error("No sections");
+      }
+      const section = eventsData.sections.find(
+        (s) => s.startTime <= time && time < s.endTime
+      );
+      return section ? section.name : undefined;
+    };
+    vvNotes = voicevoxData.notes.filter(
+      ([start, end]) =>
+        findSection(start) !== "intro" &&
+        findSection(end) !== "intro"
+    );
+  }
+  const draw = (piano: [number, number, number][]) => {
     for (const [start, end, midi] of piano) {
       let x = right + ((start - audioTime - duration / 2) / duration) * width;
       let w = ((end - start) / duration) * width;
@@ -144,13 +164,15 @@ function drawPiano(audioTime: number) {
 
       const y = 84 - midi;
       quine.rect(x, 8 + y, w, 1, [
-        255,
-        255,
-        255,
+        ...color,
         start < audioTime && audioTime < end ? 255 : 128,
       ]);
     }
-  }
+  };
+
+  // draw(midiData.melody);
+  draw(midiData.solo);
+  draw(vvNotes);
 }
 
 function drawKick(audioTime: number) {
