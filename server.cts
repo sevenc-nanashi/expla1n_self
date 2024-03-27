@@ -26,7 +26,7 @@ server.listen(
     host: "0.0.0.0",
   },
   async () => {
-    console.log("Running at http://localhost:3000");
+    console.log("Running at http://localhost:3141");
     const ctx = await esbuild.context({
       entryPoints: ["src/index.ts"],
       bundle: true,
