@@ -219,7 +219,7 @@ function drawClap(audioTime: number) {
 }
 
 function drawBell(audioTime: number) {
-  const [startTime, endTime, level] = midiData.bell.find(
+  const [startTime] = midiData.bell.find(
     (c) => ticksToTime(c[0]) <= audioTime && audioTime < ticksToTime(c[1]),
   ) ?? [undefined, undefined, undefined];
   if (!startTime) {
