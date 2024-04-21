@@ -40,9 +40,9 @@ export function draw() {
   if (currentSection() === "interlude") {
     const texts = [
       "Drum: RVK-808",
-      "Crash: Cakewalk TTS-1",
-      "Bass: Vital",
-      "Chord: Vital",
+      "Crash: SI-Drum Kit",
+      "Bass/Chord: Vital",
+      "Bell: The Bells",
       "Melody: Soft Piano (LABS)",
       "Solo: Electric Piano (LABS)",
       "DAW: Cakewalk",

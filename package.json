@@ -6,11 +6,12 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "midi": "ts-node --transpileOnly midi.cts",
-    "events": "ts-node --transpileOnly events.cts",
-    "voicevox": "ts-node --transpileOnly voicevox.cts",
+    "midi": "tsx midi.cts",
+    "events": "tsx events.cts",
+    "voicevox": "tsx voicevox.cts",
+    "codegen": "run-p midi events voicevox",
     "dev": "vite",
-    "serve": "nodemon --watch server.cts --exec ts-node server.cts",
+    "serve": "nodemon --watch server.cts --exec tsx server.cts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -23,6 +24,8 @@
     "@types/p5": "^1.7.6",
     "@types/serve-handler": "6.1.4",
     "nodemon": "^3.1.0",
+    "npm-run-all2": "^6.1.2",
+    "tsx": "^4.7.2",
     "vite": "^5.1.6"
   },
   "dependencies": {
@@ -34,7 +37,6 @@
     "p5": "^1.9.1",
     "p5.capture": "^1.4.1",
     "serve-handler": "6.1.5",
-    "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
   }
 }

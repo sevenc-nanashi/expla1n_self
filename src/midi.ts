@@ -15,6 +15,7 @@ export let graphics: p5.Graphics;
 export function setup() {
   graphics = p.createGraphics(width, height);
 }
+const ticksToTime = (ticks: number) => (ticks / midiData.ppq) * (60 / 140);
 
 export function draw() {
   if (!audio.audio) {
@@ -37,13 +38,15 @@ export function draw() {
   drawKick(audioTime);
   pe("drawClap");
   drawClap(audioTime);
+  pe("drawBell");
+  drawBell(audioTime);
 
   return { chord, bass };
 }
 
 function drawChords(audioTime: number) {
   const [time, notes, name] = midiData.chords.find(
-    (c) => c[0][0] <= audioTime && audioTime < c[0][1]
+    (c) => c[0][0] <= audioTime && audioTime < c[0][1],
   ) ?? [undefined, undefined, undefined];
   if (time) {
     const [start] = time;
@@ -54,7 +57,7 @@ function drawChords(audioTime: number) {
 }
 function drawBass(audioTime: number) {
   const [time, name] = midiData.bass.find(
-    (c) => c[0][0] <= audioTime && audioTime < c[0][1]
+    (c) => c[0][0] <= audioTime && audioTime < c[0][1],
   ) ?? [undefined, undefined];
   if (time) {
     const [start] = time;
@@ -84,7 +87,7 @@ const hasPrevFewSecondsCache: { [key: number]: boolean } = {};
 const hasPrevFewSeconds = (lastTime: number) => {
   if (hasPrevFewSecondsCache[lastTime] == undefined) {
     hasPrevFewSecondsCache[lastTime] = !!midiData.openHihats.find(
-      (t) => t > lastTime - 2 && t < lastTime && t !== lastTime
+      (t) => t > lastTime - 2 && t < lastTime && t !== lastTime,
     );
   }
   return hasPrevFewSecondsCache[lastTime];
@@ -134,14 +137,13 @@ function drawPianoRoll(audioTime: number, color: number[] = [255, 255, 255]) {
         throw new Error("No sections");
       }
       const section = eventsData.sections.find(
-        (s) => s.startTime <= time && time < s.endTime
+        (s) => s.startTime <= time && time < s.endTime,
       );
       return section ? section.name : undefined;
     };
     vvNotes = voicevoxData.notes.filter(
       ([start, end]) =>
-        findSection(start) !== "intro" &&
-        findSection(end) !== "intro"
+        findSection(start) !== "intro" && findSection(end) !== "intro",
     );
   }
   const draw = (piano: [number, number, number][]) => {
@@ -213,5 +215,48 @@ function drawClap(audioTime: number) {
     graphics.stroke(192, 192, 255, 255 * (1 - progress));
     graphics.strokeWeight(quine.charWidth * (2 - progress));
     graphics.ellipse(width, height / 2, radiusX * progress, radiusY * progress);
+  }
+}
+
+function drawBell(audioTime: number) {
+  const [startTime, endTime, level] = midiData.bell.find(
+    (c) => ticksToTime(c[0]) <= audioTime && audioTime < ticksToTime(c[1]),
+  ) ?? [undefined, undefined, undefined];
+  if (!startTime) {
+    return;
+  }
+  const currentMeasure = Math.floor(startTime / midiData.ppq / 4);
+  if (currentMeasure === 48) {
+    return;
+  }
+  const firstBellInMeasure = midiData.bell.find(
+    (c) => Math.floor(c[0] / midiData.ppq / 4) === currentMeasure,
+  );
+  const bellsInMeasure = midiData.bell.filter((c) => {
+    const diff = c[0] - firstBellInMeasure[0];
+    return diff >= 0 && diff < midiData.ppq * 4;
+  });
+  const widthRatio = 0.25;
+  const left = (quine.numChars / 2) * (1 - widthRatio);
+  const right = (quine.numChars / 2) * (1 + widthRatio);
+  const startTick = firstBellInMeasure[0];
+  const endTick = firstBellInMeasure[0] + midiData.ppq * 4;
+  for (const [start, end, level] of bellsInMeasure) {
+    const x =
+      left + ((start - startTick) / (endTick - startTick)) * (right - left);
+    const w = ((end - start) / (endTick - startTick)) * (right - left);
+    const y = 100 - level;
+    const startTime = ticksToTime(start);
+    const endTime = ticksToTime(end);
+    quine.rect(x, 54 + y, w, 1, [
+      255,
+      255,
+      128,
+      startTime <= audioTime && audioTime < endTime
+        ? 255
+        : audioTime < startTime
+          ? 128
+          : 32,
+    ]);
   }
 }

@@ -1,7 +1,7 @@
 import p5 from "p5";
 import { width, height, ox, oy } from "./const";
 export let charWidth: number;
-export const charHeight = 11;
+export const charHeight = 10;
 export const charPadding = 2;
 const code =
   // @ts-ignore

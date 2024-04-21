@@ -13,15 +13,17 @@ import { gzipSync } from "node:zlib";
   }
   const chordInfos = await parseChords(parsed);
   const bassInfo = await parseBass(parsed);
+  const bellInfo = await parseBell(parsed);
   const melodyInfo = await parsePiano(parsed, "Melody / SofP");
   const soloInfo = await parsePiano(parsed, "Solo / EleP");
   const { closedHihats, openHihats, kicks, claps } = await parse808(parsed);
-  const crashes = await parseTts1(parsed);
+  const crashes = await parseCrash(parsed);
   const consts: [string, string, any][] = [
     ["chords", "[[number, number], number[], string][]", chordInfos],
     ["bass", "[[number, number], string][]", bassInfo],
     ["crashes", "number[]", crashes],
     ["openHihats", "number[]", openHihats],
+    ["bell", "[number, number, number][]", bellInfo],
     ["melody", "[number, number, number][]", melodyInfo],
     ["solo", "[number, number, number][]", soloInfo],
     ["kicks", "number[]", kicks],
@@ -58,6 +60,11 @@ async function parseChords(parsed: midi.Midi) {
   for (const [ticks, events] of Object.entries(chords)) {
     const notes = events.map((e) => Note.fromMidi(e.midi));
     const chord = Chord.for(notes);
+    console.log(
+      Math.floor(events[0].bars),
+      (events[0].bars % 1) * 4,
+      chord?.getName()
+    );
     const time = events[0].time;
     const endTime = events[0].time + events[0].duration;
     const name = chord?.getName();
@@ -89,6 +96,24 @@ async function parsePiano(parsed: midi.Midi, name: string) {
   console.log(
     name,
     "highest",
+    soloInfos.map((s) => s[2]).sort((a, b) => b - a)[0]
+  );
+
+  return soloInfos;
+}
+
+async function parseBell(parsed: midi.Midi) {
+  const soloTrack = parsed.tracks.find((t) => t.name === "Bell / The Bells");
+  if (!soloTrack) {
+    throw new Error("No solo track found");
+  }
+  const soloInfos: [number, number, number][] = [];
+  for (const note of soloTrack.notes) {
+    soloInfos.push([note.ticks, note.ticks + note.durationTicks, note.midi]);
+  }
+  soloInfos.sort((a, b) => a[0] - b[0]);
+  console.log(
+    "bell highest",
     soloInfos.map((s) => s[2]).sort((a, b) => b - a)[0]
   );
 
@@ -137,12 +162,12 @@ async function parse808(parsed: midi.Midi) {
   return { closedHihats, openHihats, kicks, claps };
 }
 
-async function parseTts1(parsed: midi.Midi) {
-  const tts1Track = parsed.tracks.find((t) => t.name === "Crash / TTS-1");
-  if (!tts1Track) {
-    throw new Error("No tts1 track found");
+async function parseCrash(parsed: midi.Midi) {
+  const crashTrack = parsed.tracks.find((t) => t.name === "Crash / SI Drum");
+  if (!crashTrack) {
+    throw new Error("No crash track found");
   }
-  return tts1Track.notes.map((n) => n.time);
+  return crashTrack.notes.map((n) => n.time);
 }
 
 async function jsonEncodeAndGzip(data: any) {
