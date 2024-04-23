@@ -6,9 +6,10 @@
 ## 大体の構造
 
 - src: 描画。
-- events.ts: 歌詞とセクションのコードを生成。
-- midi.ts: MIDI ファイルの生成。
-- server.ts: 開発用サーバー。
+- events.cts: 歌詞とセクションのコードを生成。
+- voicevox.cts: ボイボ周りのデータから生成。
+- midi.cts: MIDI データから生成。
+- server.cts: 開発用サーバー。
 
 ## ライセンス（利用規約）
 
