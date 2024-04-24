@@ -6,6 +6,7 @@
 ## 大体の構造
 
 - src: 描画。
+- events.yml: 歌詞とセクションのデータ。
 - events.cts: 歌詞とセクションのコードを生成。
 - voicevox.cts: ボイボ周りのデータから生成。
 - midi.cts: MIDI データから生成。
