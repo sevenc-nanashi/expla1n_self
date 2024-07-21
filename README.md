@@ -1,6 +1,6 @@
 # expla1n(self)
 
-[expla1n(self)](https://www.nicovideo.jp/watch/sm43690833) のソースコード。
+expla1n(self)（[ニコニコ](https://www.nicovideo.jp/watch/sm43690833)、[YouTube](https://www.youtube.com/watch?v=W-k-ii_XtaM)）のソースコード。
 解説は[Note](https://note.com/sevenc_nanashi/n/nf1079e55f4a8)にて公開しています。（いいねが欲しいからね、しょうがない）
 
 ## 大体の構造
